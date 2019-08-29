@@ -23,7 +23,8 @@ def default_audio_loader(path, S_max):
     else:
         S = np.pad(S, ((0,0), (0, max(0, S_max-S.shape[-1]))),'constant', constant_values=(0))
     #print(S.shape) #(128, S_max)
-    S = np.transpose(np.log(1+10000*S))
+    #S = np.transpose(np.log(1+10000*S))
+    S = np.transpose(np.log(1+1000*S))
     #print(S.shape) #(S_max, 128)
     S = (S-avgv)/stdv
     #S = np.expand_dims(S, 2) # (N, 128, 1)
