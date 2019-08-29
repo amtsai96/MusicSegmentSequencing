@@ -6,7 +6,7 @@ import torch.utils.data
 import torchvision.transforms as transforms
 import librosa
 
-data_path = 'audio_data/'
+data_path = '_sub_data/'#'_one_data/'#'audio_data/'
 # def default_image_loader(path):
 #     return Image.open(path).convert('RGB')
 
@@ -47,15 +47,15 @@ class TripletAudioLoader(torch.utils.data.Dataset):
     filenames_filename = data_path + 'filenames.txt'
     train_triplet_file = data_path + 'triplets_train.txt'
     test_triplet_file = data_path + 'triplets_test.txt'
-    def __init__(self, base_path, subfolder_path = 'music_segments', 
+    def __init__(self, base_path, subfolder_path = 'test_music_segments', 
                 transform=None, train=True,
                 loader=default_audio_loader):
         """ filenames_filename: A text file with each line containing the path to an image e.g.,
                 images/class1/sample.jpg
             triplets_file_name: A text file with each line containing three integers, 
                 where integer i refers to the i-th image in the filenames file. 
-                xxx For a line of intergers 'a b c', a triplet is defined such that image a is more 
-                xxx similar to image c than it is to image b, e.g., 0 2017 42 
+                For a line of intergers 'a b c', a triplet is defined such that image a is more 
+                similar to image b than it is to image c, e.g., 0 42 2000
         """
         self.base_path = base_path 
         self.subfolder = subfolder_path
@@ -83,9 +83,6 @@ class TripletAudioLoader(torch.utils.data.Dataset):
         self.filenamelist = []
         for line in open(self.filenames_filename):
             self.filenamelist.append(line.rstrip('\n'))
-        # triplets = []
-        # for line in open(triplets_file_name):
-        #     triplets.append((line.split()[0], line.split()[1], line.split()[2])) # anchor, far, close
         self.triplets = triplets
         self.transform = transform
         self.loader = loader

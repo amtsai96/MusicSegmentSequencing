@@ -43,7 +43,7 @@ s = [default_audio_loader(path+a) for a in os.listdir(path) if a.endswith('.wav'
 avg = np.mean(np.array([np.mean(x, axis=1) for x in s]), axis=0)
 # avg = np.mean(avgs, axis=0)
 print(avg.shape)
-std = np.std(np.array([np.std(x, axis=1) for x in s]), axis=0)
+std = np.mean(np.array([np.std(x, axis=1) for x in s]), axis=0)
 print(std.shape)
 
 np.save('avg.npy', avg)

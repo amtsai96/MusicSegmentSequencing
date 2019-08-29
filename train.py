@@ -10,7 +10,7 @@ from torchvision import datasets, transforms
 from torch.autograd import Variable
 from torch.utils.data import DataLoader
 import torch.backends.cudnn as cudnn
-#from triplet_mnist_loader import MNIST_t
+from triplet_mnist_loader import MNIST_t
 
 from triplet_audio_loader import TripletAudioLoader
 from simple_tripletnet import TripletNet, EmbeddingNet
@@ -24,7 +24,7 @@ parser.add_argument('--batch-size', type=int, default=64, metavar='N',
                     help='input batch size for training (default: 64)')
 parser.add_argument('--test-batch-size', type=int, default=1000, metavar='N',
                     help='input batch size for testing (default: 1000)')
-parser.add_argument('--epochs', type=int, default=3, metavar='N',
+parser.add_argument('--epochs', type=int, default=100, metavar='N',
                     help='number of epochs to train (default: 10)')
 parser.add_argument('--lr', type=float, default=0.01, metavar='LR',
                     help='learning rate (default: 0.01)')
@@ -63,7 +63,7 @@ def main():
     base_path = './'#'./music_segments'
     #'/Users/amandatsai/git_folders/JazzMusicMashup/music_segments/'
     #'/Users/amandatsai/FILES/NCKU/Academia_Sinica/test/MASHUP/music_segments/'
-    train_loader = DataLoader(
+    '''train_loader = DataLoader(
         TripletAudioLoader(base_path, train=True,
                        transform=transforms.Compose([
                            transforms.ToTensor()
@@ -75,23 +75,23 @@ def main():
                        transform=transforms.Compose([
                            transforms.ToTensor()
                        ])),
-        batch_size=args.batch_size, shuffle=True, **kwargs)
+        batch_size=args.batch_size, shuffle=False, **kwargs)
 
     '''
     train_loader = torch.utils.data.DataLoader(
-        MNIST_t('./data', train=True, download=True,
+        MNIST_t('./mnist_data', train=True, download=True,
                        transform=transforms.Compose([
                            transforms.ToTensor(),
                            transforms.Normalize((0.1307,), (0.3081,))
                        ])),
         batch_size=args.batch_size, shuffle=True, **kwargs)
     test_loader = torch.utils.data.DataLoader(
-        MNIST_t('./data', train=False, transform=transforms.Compose([
+        MNIST_t('./mnist_data', train=False, transform=transforms.Compose([
                            transforms.ToTensor(),
                            transforms.Normalize((0.1307,), (0.3081,))
                        ])),
         batch_size=args.batch_size, shuffle=True, **kwargs)
-    '''
+    
 
     model = EmbeddingNet()
     tnet = TripletNet(model)
@@ -122,7 +122,6 @@ def main():
         train(train_loader, tnet, criterion, optimizer, epoch)
         # evaluate on validation set
         acc = test(test_loader, tnet, criterion, epoch)
-        print(acc)
 
         # remember best acc and save checkpoint
         is_best = acc > best_acc
@@ -140,7 +139,7 @@ def main():
 
     plot('acc', 'test', epochs, acc_test, color='red', label='Accurracy')
     plot('loss', 'test', epochs, loss_test, color='green', label='Loss')
-    print('>>> Best Accuracy: ',best_acc)
+    print('>>> Best Accuracy: {:.4f}'.format(best_acc))
 
     
 def train(train_loader, tnet, criterion, optimizer, epoch):
@@ -210,7 +209,7 @@ def test(test_loader, tnet, criterion, epoch):
         if args.cuda:
             target = target.cuda()
         target = Variable(target)
-        test_loss =  criterion(dista, distb, target).data#[0]
+        test_loss = criterion(dista, distb, target).data#[0]
 
         # measure accuracy and record loss
         acc = accuracy(dista, distb)
@@ -267,6 +266,9 @@ class AverageMeter(object):
 
 def accuracy(dista, distb, margin=0):
     pred = (dista - distb - margin).cpu().data
+    #print(pred)
+    #print(float((pred > 0).sum()*1.0), dista.size()[0])
+    #print(pred.shape)#2760
     return float((pred > 0).sum()*1.0) / dista.size()[0]
 
 if __name__ == '__main__':
