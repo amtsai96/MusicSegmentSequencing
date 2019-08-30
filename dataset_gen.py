@@ -145,7 +145,7 @@ def output_triplets_to_file(output_path_file, out_lists):
     #     writer = csv.writer(f, delimiter=' ')
     #     writer.writerows(out_lists)
 
-
+############################
 wav_list, label_list = gen_wav_list()
 gen_summary_file(wav_list)
 output_list_to_file(output_filepath_file+postfix, wav_list)
@@ -159,9 +159,9 @@ train, test = make_triplet_list_split(wav_train, lab_train, wav_test, lab_test)
 #train, test = make_triplet_list_split_only_one(wav_train, lab_train, wav_test, lab_test)
 output_triplets_to_file(output_triplets_file+'_train'+postfix, train)
 output_triplets_to_file(output_triplets_file+'_test'+postfix, test)
+############################
 
 #train = [[1,2,[2,3,4]],[3,4,[5,6,7]]]
-
 #wav_list, label_list = gen_wav_list()
 #triplets = make_triplet_list(wav_list, label_list)
 #triplets = [[1,2,3],[4,5,6],[7,8,9]]
@@ -172,27 +172,27 @@ output_triplets_to_file(output_triplets_file+'_test'+postfix, test)
 #print(len(triplets)) #22333
 
 
+def check_max(data_path):
+    import librosa
+    S_max = 0
+    #data_path = 'audio_data/'
+    avgv = np.load(data_path + 'avg.npy')
+    stdv = np.load(data_path + 'std.npy')
+    def default_audio_loader(path):
+        y, _ = librosa.core.load(path, sr=22050)
+        S = librosa.feature.melspectrogram(y, sr=22050, n_fft=2048, hop_length=512, n_mels=128)
+        #S = np.transpose(np.log(1+10000*S))
+        #S = (S-avgv)/stdv
+        #S = np.expand_dims(S, 2)
+        #print(S.shape)
+        return S
 
-'''
-import librosa
-S_max = 0
-data_path = 'audio_data/'
-avgv = np.load(data_path + 'avg.npy')
-stdv = np.load(data_path + 'std.npy')
-def default_audio_loader(path, S_max):
-    y, _ = librosa.core.load(path, sr=22050)
-    S = librosa.feature.melspectrogram(y, sr=22050, n_fft=2048, hop_length=512, n_mels=128)
-    if S.shape[-1] > S_max: S_max = S.shape[-1]
-    print('MAX:',S_max)
-    #S = np.transpose(np.log(1+10000*S))
-    #S = (S-avgv)/stdv
-    #S = np.expand_dims(S, 2)
-    #print(S.shape)
-    return S, S_max
-
-for dirPath, dirNames, fileNames in os.walk(path):
-    for f in fileNames:
-        if not f.endswith('.wav'): continue
-        s, S_max = default_audio_loader(os.path.join(dirPath, f), S_max)
-print('>>MAX:',S_max)
-'''
+    for dirPath, dirNames, fileNames in os.walk(path):
+        for f in fileNames:
+            if not f.endswith('.wav'): continue
+            S = default_audio_loader(os.path.join(dirPath, f))
+            if S.shape[-1] > S_max:
+                S_max = S.shape[-1]
+                print('MAX:',S_max)
+    print('>>MAX:',S_max)
+    return S_max
