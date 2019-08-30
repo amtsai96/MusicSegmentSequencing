@@ -63,7 +63,7 @@ def main():
     base_path = './'#'./music_segments'
     #'/Users/amandatsai/git_folders/JazzMusicMashup/music_segments/'
     #'/Users/amandatsai/FILES/NCKU/Academia_Sinica/test/MASHUP/music_segments/'
-    '''train_loader = DataLoader(
+    train_loader = DataLoader(
         TripletAudioLoader(base_path, train=True,
                        transform=transforms.Compose([
                            transforms.ToTensor()
@@ -91,7 +91,7 @@ def main():
                            transforms.Normalize((0.1307,), (0.3081,))
                        ])),
         batch_size=args.batch_size, shuffle=True, **kwargs)
-    
+    '''
 
     model = EmbeddingNet()
     tnet = TripletNet(model)
