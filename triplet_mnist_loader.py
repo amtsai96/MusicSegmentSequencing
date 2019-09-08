@@ -44,6 +44,7 @@ class MNIST_t(data.Dataset):
             self.make_triplet_list(n_train_triplets)
             triplets = []
             for line in open(os.path.join(root, self.processed_folder, self.train_triplet_file)):
+                if len(line.split()) <3: continue
                 triplets.append((int(line.split()[0]), int(line.split()[1]), int(line.split()[2]))) # anchor, close, far
             self.triplets_train = triplets
         else:
@@ -51,6 +52,7 @@ class MNIST_t(data.Dataset):
             self.make_triplet_list(n_test_triplets)
             triplets = []
             for line in open(os.path.join(root, self.processed_folder, self.test_triplet_file)):
+                if len(line.split()) <3: continue
                 triplets.append((int(line.split()[0]), int(line.split()[1]), int(line.split()[2]))) # anchor, close, far
             self.triplets_test = triplets
 

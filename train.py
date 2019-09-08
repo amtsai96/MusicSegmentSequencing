@@ -65,6 +65,7 @@ def main():
     base_path = './'  # './music_segments'
     # '/Users/amandatsai/git_folders/JazzMusicMashup/music_segments/'
     # '/Users/amandatsai/FILES/NCKU/Academia_Sinica/test/MASHUP/music_segments/'
+    '''
     train_loader = DataLoader(
         TripletAudioLoader(base_path, train=True,
                            transform=transforms.Compose([
@@ -93,7 +94,7 @@ def main():
             transforms.Normalize((0.1307,), (0.3081,))
         ])),
         batch_size=args.batch_size, shuffle=True, **kwargs)
-    '''
+    
 
     model = EmbeddingNet()
     tnet = TripletNet(model)
@@ -294,6 +295,10 @@ class VisdomLinePlotter(object):
 
     def plot(self, var_name, split_name, x, y, label):
         #('acc', 'test', epoch, accs.avg)
+        if isinstance(x, torch.Tensor):
+            x = x.cpu().numpy()
+        if isinstance(y, torch.Tensor):
+            y = y.cpu().numpy()
         if var_name not in self.plots:
             self.plots[var_name] = self.viz.line(X=np.array([x, x]), Y=np.array([y, y]), env=self.env, opts=dict(
                 legend=[split_name],
