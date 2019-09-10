@@ -6,9 +6,12 @@ import torch.utils.data
 import torchvision.transforms as transforms
 import librosa
 
-data_path = '_sub_data/'#'_one_data/'#'audio_data/'
+data_path = './_sub_data/' #'audio_data/'
+music_folder = './test_music_segments/'
+filenames_txt = data_path + 'filenames.txt'
 avgv = np.load(data_path + 'avg.npy')
 stdv = np.load(data_path + 'std.npy')
+
 def default_audio_loader(path, S_max, sr=22050):
     y, _ = librosa.core.load(path, sr=sr)
     #S = librosa.feature.chroma_stft(y=y, sr=sr)
@@ -49,15 +52,12 @@ def _default_audio_loader(path, S_max, sr=22050):
 
 class TripletAudioLoader(torch.utils.data.Dataset):
     S_max = 100
-    filenames_filename = data_path + 'filenames.txt'
-    train_triplet_file = data_path + 'triplets_train.txt'
-    test_triplet_file = data_path + 'triplets_test.txt'
     #neg_num = 5
 
-    def __init__(self, base_path, subfolder_path = 'test_music_segments', 
-                transform=None, train=True,
+    def __init__(self, data_txt, audio_file_folder = music_folder,
+                transform=None, 
                 feature_extractor=default_audio_loader):
-        """ filenames_filename: A text file with each line containing the path to an audio segment e.g.,
+        """ filenames_txt: A text file with each line containing the path to an audio segment e.g.,
                 music_segments/000/cut000-001.wav
             triplets_file_name: A text file with each line containing three integers, 
                 where integer i refers to the i-th image in the filenames file. 
@@ -65,14 +65,9 @@ class TripletAudioLoader(torch.utils.data.Dataset):
                 similar to audio b than it is to audio c, d, e, f,and g. e.g., 41 42 [2000 123 547 47 99]
                 (Since we define positive case is exactly the next segment)
         """
-        self.base_path = base_path 
-        self.subfolder = subfolder_path
-        self.train = train
         #ancs, poss, negs = [], [], [] # Anchor, Positive, Negative
 
-        if self.train: FILE_OPEN = self.train_triplet_file
-        else: FILE_OPEN = self.test_triplet_file
-        with open(os.path.join(base_path, FILE_OPEN)) as f:
+        with open(os.path.join(data_path, data_txt)) as f:
             triplets = []
             for line in f:
                 #ancs.append(int(line.split()[0]))
@@ -83,16 +78,11 @@ class TripletAudioLoader(torch.utils.data.Dataset):
                 #negs = [int(a) for a in negs]
                 #triplets.append((int(line.split()[0]), int(line.split()[1]), negs)) # anchor, close, far
         self.triplets = triplets#(ancs, poss, negs)
-
-        if self.train:
-            self.triplets_train = self.triplets
-        else:
-            self.triplets_test = self.triplets
-
+        self.audio_file_folder = audio_file_folder
         self.audio_path = []
-        with open(self.filenames_filename) as f:
+        with open(filenames_txt) as f:
             for line in f:
-                self.audio_path.append(os.path.join(self.base_path, self.subfolder, line.rstrip('\n')))
+                self.audio_path.append(os.path.join(self.audio_file_folder, line.rstrip('\n')))
         self.transform = transform
         self.feature_extractor = feature_extractor
 

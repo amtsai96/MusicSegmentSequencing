@@ -61,16 +61,15 @@ def main():
 
     kwargs = {'num_workers': 1, 'pin_memory': True} if args.cuda else {}
 
-    base_path = './'  # './music_segments'
     train_loader = DataLoader(
-        TripletAudioLoader(base_path, train=True,
+        TripletAudioLoader('triplets_train.txt',
                            transform=transforms.Compose([
                                transforms.ToTensor()
                            ])),
         batch_size=args.batch_size, shuffle=True, **kwargs)
 
     test_loader = DataLoader(
-        TripletAudioLoader(base_path, train=False,
+        TripletAudioLoader('triplets_test.txt',
                            transform=transforms.Compose([
                                transforms.ToTensor()
                            ])),
