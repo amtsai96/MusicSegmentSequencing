@@ -1,4 +1,3 @@
-#from PIL import Image
 import os
 import os.path
 import numpy as np
@@ -17,7 +16,6 @@ def default_audio_loader(path, S_max, sr=22050):
     #S = librosa.feature.chroma_stft(y=y, sr=sr)
     S = np.abs(librosa.stft(y, n_fft=4096))**2
     S = librosa.feature.chroma_stft(S=S, sr=sr)
-
     #print(S.shape)#(128, N)
     if S.shape[-1] > S_max: # clip
         S = S[:, :S_max]
@@ -25,11 +23,7 @@ def default_audio_loader(path, S_max, sr=22050):
         S = np.pad(S, ((0,0), (0, max(0, S_max-S.shape[-1]))),'constant', constant_values=(0))
     S = np.transpose(np.log(1+1000*S))
     #print(S.shape) #(S_max, 12)
-    ##S = (S-avgv)/stdv
     #S = S / S.max()
-    #print(S.max())
-    #S = np.expand_dims(S, 2) # (N, 128, 1)
-    #print(S.shape)
     return S
 
 def _default_audio_loader(path, S_max, sr=22050):
@@ -66,7 +60,6 @@ class TripletAudioLoader(torch.utils.data.Dataset):
                 (Since we define positive case is exactly the next segment)
         """
         #ancs, poss, negs = [], [], [] # Anchor, Positive, Negative
-
         with open(os.path.join(data_path, data_txt)) as f:
             triplets = []
             for line in f:
@@ -90,18 +83,6 @@ class TripletAudioLoader(torch.utils.data.Dataset):
         #self.poss = poss # Positive
         #self.negs = negs # Negative
         #self.label = label # from which song
-
-    # def __getitem__(self, index):
-    #     path1, path2, path3 = self.triplets[index]
-    #     #path3 = path3s[0] # we have more than one "far samples" ... 
-    #     img1 = self.feature_extractor(os.path.join(self.base_path, self.subfolder, self.filenamelist[int(path1)]), self.S_max)
-    #     img2 = self.feature_extractor(os.path.join(self.base_path, self.subfolder, self.filenamelist[int(path2)]), self.S_max)
-    #     img3 = self.feature_extractor(os.path.join(self.base_path, self.subfolder, self.filenamelist[int(path3)]), self.S_max)
-    #     if self.transform is not None:
-    #         img1 = self.transform(img1)
-    #         img2 = self.transform(img2)
-    #         img3 = self.transform(img3)
-    #     return img1, img2, img3
 
     def __getitem__(self, index):
         data = []
