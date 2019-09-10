@@ -9,10 +9,13 @@ import math
 import json
 
 NEED_COPY_FOLDER = False
-filename='_original.mp3'
-in_dir = '/Users/amandatsai/Downloads/pop2jazz/'
-in_dir += 'transcription_with_disjoint_notes.from_separated.soft_jazz_trio/20190403_095002.20190524_082516'
+filename = 'piano.mp3'#'_original.mp3'
+in_dir = 'D:/pop2jazz/'
+#in_dir = '/Users/amandatsai/Downloads/pop2jazz/'
+in_dir = os.path.join(in_dir, 'transcription_with_disjoint_notes.from_separated.soft_jazz_trio/20190403_095002.20190524_082516')
 #source = os.path.join(in_dir, '_original.mp3')
+out_dir='D:/piano_segments'
+if not os.path.exists(out_dir): os.mkdir(out_dir)
 
 folder_dict = {}
 '''
@@ -72,7 +75,7 @@ def txtToDict(in_txt):
         a = json.load(file)
     return a
 ###########################################
-out_dir='../../music_segments'
+
 # if NEED_COPY_FOLDER:
 #     copy_folder_structure(in_dir, out_dir)
 #     NEED_COPY_FOLDER = False
@@ -100,9 +103,8 @@ for f in os.listdir(in_dir):
                 # for file in os.listdir(fder):
                 #     print(file)
 
-    #dictToTxt(folder_dict, 'file.txt')
+    dictToTxt(folder_dict, 'file.txt')
 
 #d = txtToDict('file.txt')
-#print(',,,',d)
 
 

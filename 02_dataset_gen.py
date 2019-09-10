@@ -140,10 +140,6 @@ def output_triplets_to_file(output_path_file, out_lists):
             a, b, c = l
             cc = [int(x) for x in c]
             o.write('{} {} {}\n'.format(a,b,cc))
-    # import csv
-    # with open(output_path_file[:-4]+'___.txt', "w") as f:
-    #     writer = csv.writer(f, delimiter=' ')
-    #     writer.writerows(out_lists)
 
 ############################
 wav_list, label_list = gen_wav_list()
@@ -171,7 +167,7 @@ output_triplets_to_file(output_triplets_file+'_test'+postfix, test)
 #print(len(wav_list)) #22556
 #print(len(triplets)) #22333
 
-
+'''
 def check_max(data_path):
     import librosa
     S_max = 0
@@ -196,3 +192,4 @@ def check_max(data_path):
                 print('MAX:',S_max)
     print('>>MAX:',S_max)
     return S_max
+'''

@@ -8,13 +8,17 @@ class TripletNet(nn.Module):
         super(TripletNet, self).__init__()
         self.embedding_net = embedding_net
 
-    def forward(self, x, y, z):
-        embedded_x = self.embedding_net(x.float())
-        embedded_y = self.embedding_net(y.float())
-        embedded_z = self.embedding_net(z.float())
-        dist_a = F.pairwise_distance(embedded_x, embedded_y, 2)
-        dist_b = F.pairwise_distance(embedded_x, embedded_z, 2)
-        return dist_a, dist_b, embedded_x, embedded_y, embedded_z
+    def forward(self, A, P, N):
+        embedded_a = self.embedding_net(A.float())
+        embedded_p = self.embedding_net(P.float())
+        embedded_n = self.embedding_net(N.float())
+        #embedded_n = [self.embedding_net(N.float()) for N in Ns]
+        dists = [F.pairwise_distance(embedded_a, embedded_p, 2)]
+        # for i in range(len(embedded_n)):
+        #     dists.append(F.pairwise_distance(embedded_a, embedded_n[i], 2))
+        # print(dists)
+        dists.append(F.pairwise_distance(embedded_a, embedded_n, 2))
+        return dists[0], dists[1], embedded_a, embedded_p, embedded_n
 
     def get_embedding(self, x):
         return self.embedding_net(x)
