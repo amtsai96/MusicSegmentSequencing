@@ -12,11 +12,7 @@ class TripletNet(nn.Module):
         embedded_a = self.embedding_net(A.float())
         embedded_p = self.embedding_net(P.float())
         embedded_n = self.embedding_net(N.float())
-        #embedded_n = [self.embedding_net(N.float()) for N in Ns]
         dists = [F.pairwise_distance(embedded_a, embedded_p, 2)]
-        # for i in range(len(embedded_n)):
-        #     dists.append(F.pairwise_distance(embedded_a, embedded_n[i], 2))
-        # print(dists)
         dists.append(F.pairwise_distance(embedded_a, embedded_n, 2))
         return dists[0], dists[1], embedded_a, embedded_p, embedded_n
 

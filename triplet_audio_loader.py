@@ -11,7 +11,7 @@ filenames_txt = data_path + 'filenames.txt'
 avgv = np.load(data_path + 'avg.npy')
 stdv = np.load(data_path + 'std.npy')
 
-def default_audio_loader(path, S_max, sr=22050):
+def audio_chromagram_loader(path, S_max, sr=22050):
     y, _ = librosa.core.load(path, sr=sr)
     #S = librosa.feature.chroma_stft(y=y, sr=sr)
     S = np.abs(librosa.stft(y, n_fft=4096))**2
@@ -26,7 +26,7 @@ def default_audio_loader(path, S_max, sr=22050):
     #S = S / S.max()
     return S
 
-def _default_audio_loader(path, S_max, sr=22050):
+def audio_mel_spectrogram_loader(path, S_max, sr=22050):
     y, _ = librosa.core.load(path, sr=sr)
     S = librosa.feature.melspectrogram(y, sr=22050, n_fft=2048, hop_length=512, n_mels=128)
     #print(S.shape)#(128, N)
@@ -50,14 +50,14 @@ class TripletAudioLoader(torch.utils.data.Dataset):
 
     def __init__(self, data_txt, audio_file_folder = music_folder,
                 transform=None, 
-                feature_extractor=default_audio_loader):
+                feature_extractor=audio_chromagram_loader):
         """ filenames_txt: A text file with each line containing the path to an audio segment e.g.,
                 music_segments/000/cut000-001.wav
-            triplets_file_name: A text file with each line containing three integers, 
-                where integer i refers to the i-th image in the filenames file. 
+            triplets_file_name: A text file with each line containing two integers and one list, 
+                where integer i refers to the i-th segment in the filenames file. 
                 For a line of intergers 'a b [c d e f g]', a triplet is contained such that audio a is more 
-                similar to audio b than it is to audio c, d, e, f,and g. e.g., 41 42 [2000 123 547 47 99]
-                (Since we define positive case is exactly the next segment)
+                similar to audio b than it is to audio c, d, e, f,and g. e.g., 41 42 [20 123 547 47 99]
+                (Since we define the positive case is exactly the next segment)
         """
         #ancs, poss, negs = [], [], [] # Anchor, Positive, Negative
         with open(os.path.join(data_path, data_txt)) as f:
@@ -98,14 +98,12 @@ class TripletAudioLoader(torch.utils.data.Dataset):
     #     for i in range(len(self.triplets[index])):
     #         if i < 2: # Anchor, Pos
     #             data.append(self.feature_extractor(self.audio_path[int(self.triplets[index][i])], self.S_max))
-    #             if self.transform is not None:
-    #                 data[i] = self.transform(data[i])
+    #             if self.transform is not None: data[i] = self.transform(data[i])
     #         else:
     #             negs = []
     #             for j in range(self.neg_num):
     #                 negs.append(self.feature_extractor(self.audio_path[int(self.triplets[index][i][j])], self.S_max))
-    #             if self.transform is not None:
-    #                 negs[i] = self.transform(negs[i])
+    #             if self.transform is not None: negs[i] = self.transform(negs[i])
     #             data.append(negs)
     #     #print(len(data), len(data[2])) #(3, 5)
     #     return data

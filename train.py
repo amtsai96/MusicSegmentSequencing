@@ -5,13 +5,12 @@ import shutil
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import torch.optim as optim
+import torch.optim
 from torchvision import datasets, transforms
 from torch.autograd import Variable
 from torch.utils.data import DataLoader
 import torch.backends.cudnn as cudnn
 #from triplet_mnist_loader import MNIST_t
-
 from triplet_audio_loader import TripletAudioLoader
 from simple_tripletnet import TripletNet, EmbeddingNet
 from visdom import Visdom
@@ -44,9 +43,7 @@ parser.add_argument('--name', default='TripletNet', type=str,
                     help='name of experiment')
 
 best_acc = 0
-# emb_train = []
-# acc_train, acc_test = [], []
-# loss_train, loss_test = [], []
+train_split_ratio = 0.2
 
 def main():
     global args, best_acc, plotter, device
@@ -56,28 +53,28 @@ def main():
     print('>> CUDA = {}'.format(args.cuda))
     torch.manual_seed(args.seed)
     if args.cuda: torch.cuda.manual_seed(args.seed)
-    
-    plotter = VisdomLinePlotter(env=args.name)
-
     kwargs = {'num_workers': 1, 'pin_memory': True} if args.cuda else {}
 
-    train_loader = DataLoader(
-        TripletAudioLoader('triplets_train.txt',
-                           transform=transforms.Compose([
-                               transforms.ToTensor()
-                           ])),
-        batch_size=args.batch_size, shuffle=True, **kwargs)
+    plotter = VisdomLinePlotter(env=args.name)
 
+    train_set = TripletAudioLoader('triplets_train.txt',transform=transforms.Compose([transforms.ToTensor()]))
+    # Creating data indices for training and validation splits:
+    train_size = int(train_split_ratio * len(train_set))
+    vali_size = len(train_set) - train_size
+    train_dataset, vali_dataset = torch.utils.data.random_split(train_set, [train_size, vali_size])
+    
+    train_loader = DataLoader(dataset=train_dataset, batch_size=args.batch_size, shuffle=True, **kwargs)
+    vali_loader = DataLoader(dataset=vali_dataset, batch_size=args.batch_size, shuffle=True, **kwargs)
+
+    '''
     test_loader = DataLoader(
-        TripletAudioLoader('triplets_test.txt',
-                           transform=transforms.Compose([
-                               transforms.ToTensor()
-                           ])),
+        TripletAudioLoader('triplets_test.txt',transform=transforms.Compose([transforms.ToTensor()])),
         batch_size=args.batch_size, shuffle=False, **kwargs)
-
+    '''
     model = EmbeddingNet()
     #tnet = TripletNet(model)
     tnet = TripletNet(model).to(device)
+
     # optionally resume from a checkpoint
     if args.resume:
         if os.path.isfile(args.resume):
@@ -97,7 +94,7 @@ def main():
     # criterion = torch.nn.CrossEntropyLoss(reduction='mean')
     # optimizer = torch.optim.SGD(model.parameters(), lr=1e-4, momentum=0.9)
     criterion = torch.nn.MarginRankingLoss(margin=args.margin)
-    optimizer = optim.SGD(tnet.parameters(), lr=args.lr, momentum=args.momentum)
+    optimizer = torch.optim.SGD(tnet.parameters(), lr=args.lr, momentum=args.momentum)
 
     n_parameters = sum([p.data.nelement() for p in tnet.parameters()])
     print('  + Number of params: {}'.format(n_parameters))
@@ -106,7 +103,8 @@ def main():
         # train for one epoch
         train(train_loader, tnet, criterion, optimizer, epoch)
         # evaluate on validation set
-        acc = test(test_loader, tnet, criterion, epoch)
+        acc = test(vali_loader, tnet, criterion, epoch)
+        #acc = test(test_loader, tnet, criterion, epoch)
 
         # remember best acc and save checkpoint
         is_best = acc > best_acc
@@ -128,7 +126,6 @@ def main():
     plot('loss', 'test', epochs, loss_test, color='green', label='Loss')
     print('>>> Best Accuracy: {:.4f}'.format(best_acc))
     '''
-
 
 def train(train_loader, tnet, criterion, optimizer, epoch):
     losses = AverageMeter()
@@ -153,7 +150,7 @@ def train(train_loader, tnet, criterion, optimizer, epoch):
         loss = loss_triplet + 0.001 * loss_embedd
 
         # measure accuracy and record loss
-        acc = accuracy(dista, distb)
+        acc = accuracy(dista, distb, args.margin)
         # losses.update(loss_triplet.data[0], A.size(0))
         losses.update(loss_triplet.data, A.size(0))
         accs.update(acc, A.size(0))
@@ -205,7 +202,7 @@ def test(test_loader, tnet, criterion, epoch):
         test_loss = criterion(dista, distb, target).data  # [0]
 
         # measure accuracy and record loss
-        acc = accuracy(dista, distb)
+        acc = accuracy(dista, distb, args.margin)
         accs.update(acc, A.size(0))
         losses.update(test_loss, A.size(0))
 
