@@ -15,7 +15,8 @@ from triplet_audio_loader import TripletAudioLoader
 from simple_tripletnet import TripletNet, EmbeddingNet
 from visdom import Visdom
 import numpy as np
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
+from sklearn.manifold import TSNE
 
 # Training settings
 parser = argparse.ArgumentParser(description='PyTorch Triplet Network')
@@ -170,6 +171,25 @@ def train(train_loader, tnet, criterion, optimizer, epoch):
                       epoch, batch_idx * len(A), len(train_loader.dataset),
                       losses.val, losses.avg,
                       100. * accs.val, 100. * accs.avg, emb_norms.val, emb_norms.avg))
+
+            # Visualization of trained flatten layer (T-SNE)
+            # tsne = TSNE(perplexity=30, n_components=2, init='pca', n_iter=5000)
+            # #plot_only = 500
+            # #low_dim_embs = tsne.fit_transform(last_layer.data.numpy()[:plot_only, :])
+            # data = (embedded_x, embedded_y, embedded_z)
+            # X_tsne = tsne.fit_transform(data)
+
+            # x_min, x_max = X_tsne.min(0), X_tsne.max(0)
+            # X_norm = (X_tsne - x_min) / (x_max - x_min)
+            # plt.figure(figsize=(8, 8))
+            # for i in range(X_norm.shape[0]):
+            #     plt.plot()
+            #     # plt.text(X_norm[i, 0], X_norm[i, 1], str(y[i]), color=plt.cm.Set1(y[i]), 
+            #     #         fontdict={'weight': 'bold', 'size': 9})
+            # plt.xticks([])
+            # plt.yticks([])
+            # plt.show()
+
     print('Plot...')
     # log avg values to somewhere
     plotter.plot('acc', 'train', epoch, accs.avg, label='Accuracy')
