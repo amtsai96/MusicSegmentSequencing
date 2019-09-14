@@ -6,9 +6,9 @@ import torchvision.transforms as transforms
 import librosa
 
 #data_path = './origin/better_music_segments_docu/'
-data_path = './origin/_sub_data/'  # 'audio_data/'
+data_path = './_sub_data/'  # 'audio_data/'
 #music_folder = './origin/better_music_segments/'
-music_folder = './origin/test_music_segments/'
+music_folder = './test_music_segments/'
 filenames_txt = data_path + 'filenames.txt'
 avgv = np.load(data_path + 'avg.npy')
 stdv = np.load(data_path + 'std.npy')
