@@ -33,8 +33,9 @@ def gen_wav_list():
     for w in wav_list: label_list.append(w[:w.rfind('/')])
     return wav_list, label_list
 
-def gen_wav_list_split(split_num, index_num):
+def gen_wav_list_split(split_num, index_num, wav_list, label_list):
     assert split_num > 0 or index_num > 0
+    '''
     wav_list, label_list = [], []
     indices = list(range(len(wav_list)))
     for dirPath, dirNames, fileNames in os.walk(path):
@@ -43,6 +44,7 @@ def gen_wav_list_split(split_num, index_num):
             wav_list.append(os.path.join(dirPath.split('/')[-1], f))
     wav_list.sort()
     for w in wav_list: label_list.append(w[:w.rfind('/')])
+    '''
     split_index = label_list.index('{:03d}'.format(split_num)) if split_num > 0 else index_num
     # if shuffle:
     #     #c = list(zip(wav_list, label_list))
@@ -149,7 +151,7 @@ output_list_to_file(output_label_file+postfix, label_list)
 
 split_num = 3#200
 index_num = -1#300
-wav_train, lab_train, wav_test, lab_test = gen_wav_list_split(split_num, index_num)
+wav_train, lab_train, wav_test, lab_test = gen_wav_list_split(split_num, index_num, wav_list, label_list)
 
 train, test = make_triplet_list_split(wav_train, lab_train, wav_test, lab_test)
 #train, test = make_triplet_list_split_only_one(wav_train, lab_train, wav_test, lab_test)
@@ -164,32 +166,3 @@ output_triplets_to_file(output_triplets_file+'_test'+postfix, test)
 #output_list_to_file(output_filepath_file, wav_list)
 #output_list_to_file(output_label_file, label_list)
 #output_triplets_to_file(output_triplets_file, triplets)
-#print(len(wav_list)) #22556
-#print(len(triplets)) #22333
-
-'''
-def check_max(data_path):
-    import librosa
-    S_max = 0
-    #data_path = 'audio_data/'
-    avgv = np.load(data_path + 'avg.npy')
-    stdv = np.load(data_path + 'std.npy')
-    def default_audio_loader(path):
-        y, _ = librosa.core.load(path, sr=22050)
-        S = librosa.feature.melspectrogram(y, sr=22050, n_fft=2048, hop_length=512, n_mels=128)
-        #S = np.transpose(np.log(1+10000*S))
-        #S = (S-avgv)/stdv
-        #S = np.expand_dims(S, 2)
-        #print(S.shape)
-        return S
-
-    for dirPath, dirNames, fileNames in os.walk(path):
-        for f in fileNames:
-            if not f.endswith('.wav'): continue
-            S = default_audio_loader(os.path.join(dirPath, f))
-            if S.shape[-1] > S_max:
-                S_max = S.shape[-1]
-                print('MAX:',S_max)
-    print('>>MAX:',S_max)
-    return S_max
-'''

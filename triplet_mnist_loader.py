@@ -160,7 +160,8 @@ class MNIST_t(data.Dataset):
             c = np.random.choice(np.where(np_labels!=class_idx)[0], int(ntriplets/10), replace=True)
 
             for i in range(a.shape[0]):
-                triplets.append([int(a[i]), int(c[i]), int(b[i])])           
+                #triplets.append([int(a[i]), int(c[i]), int(b[i])])
+                triplets.append([int(a[i]), int(b[i]), int(c[i])])          
 
         with open(os.path.join(self.root, self.processed_folder, filename), "w") as f:
             writer = csv.writer(f, delimiter=' ')
