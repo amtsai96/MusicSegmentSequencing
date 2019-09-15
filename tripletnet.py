@@ -45,6 +45,7 @@ class ChromagramEmbeddingNet(nn.Module):
         return self.fc2(x)
 
 
+
 # Mel-Spectrogram - Conv2D
 class MelSpectrogramEmbeddingNet(nn.Module):
     def __init__(self):

@@ -5,10 +5,8 @@ import torch.utils.data
 import torchvision.transforms as transforms
 import librosa
 
-#data_path = './origin/better_music_segments_docu/'
-data_path = './_sub_data/'  # 'audio_data/'
-#music_folder = './origin/better_music_segments/'
-music_folder = './test_music_segments/'
+data_path = 'audio_data/'
+music_folder = './test_piano_segments/'
 filenames_txt = data_path + 'filenames.txt'
 avgv = np.load(data_path + 'avg.npy')
 stdv = np.load(data_path + 'std.npy')
@@ -47,9 +45,9 @@ def audio_mel_spectrogram_loader(path, S_max, sr=22050):
 class TripletAudioLoader(torch.utils.data.Dataset):
     S_max = 100
     #neg_num = 5
-    def __init__(self, data_txt, audio_file_folder=music_folder,
-                 transform=None, 
-                 feature_extractor=audio_mel_spectrogram_loader):
+    def __init__(self, data_txt, feature, 
+                audio_file_folder=music_folder, transform=None):
+                 #feature_extractor=audio_mel_spectrogram_loader):
                  #feature_extractor=audio_chromagram_loader):
         """ filenames_txt: A text file with each line containing the path to an audio segment e.g.,
                 music_segments/000/cut000-001.wav
@@ -78,7 +76,7 @@ class TripletAudioLoader(torch.utils.data.Dataset):
             for line in f:
                 self.audio_path.append(os.path.join(self.audio_file_folder, line.rstrip('\n')))
         self.transform = transform
-        self.feature_extractor = feature_extractor
+        self.feature_extractor = audio_mel_spectrogram_loader if feature == 'mel_spec' else audio_chromagram_loader
 
         # self.ancs = ancs # Anchor
         # self.poss = poss # Positive

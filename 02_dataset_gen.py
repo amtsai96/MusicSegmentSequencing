@@ -5,7 +5,9 @@ import librosa
 import random
 
 test = 'test_'
-path = test + 'music_segments/'
+path = test + 'piano_segments/'
+out_dir = 'out/'
+if not os.path.exists(out_dir): os.mkdir(out_dir)
 output_filepath_file = 'filenames'
 output_label_file = 'labels' # song_index
 output_triplets_file = 'triplets'
@@ -146,8 +148,8 @@ def output_triplets_to_file(output_path_file, out_lists):
 ############################
 wav_list, label_list = gen_wav_list()
 gen_summary_file(wav_list)
-output_list_to_file(output_filepath_file+postfix, wav_list)
-output_list_to_file(output_label_file+postfix, label_list)
+output_list_to_file(out_dir+output_filepath_file+postfix, wav_list)
+output_list_to_file(out_dir+output_label_file+postfix, label_list)
 
 split_num = 3#200
 index_num = -1#300
@@ -155,14 +157,6 @@ wav_train, lab_train, wav_test, lab_test = gen_wav_list_split(split_num, index_n
 
 train, test = make_triplet_list_split(wav_train, lab_train, wav_test, lab_test)
 #train, test = make_triplet_list_split_only_one(wav_train, lab_train, wav_test, lab_test)
-output_triplets_to_file(output_triplets_file+'_train'+postfix, train)
-output_triplets_to_file(output_triplets_file+'_test'+postfix, test)
+output_triplets_to_file(out_dir+output_triplets_file+'_train'+postfix, train)
+output_triplets_to_file(out_dir+output_triplets_file+'_test'+postfix, test)
 ############################
-
-#train = [[1,2,[2,3,4]],[3,4,[5,6,7]]]
-#wav_list, label_list = gen_wav_list()
-#triplets = make_triplet_list(wav_list, label_list)
-#triplets = [[1,2,3],[4,5,6],[7,8,9]]
-#output_list_to_file(output_filepath_file, wav_list)
-#output_list_to_file(output_label_file, label_list)
-#output_triplets_to_file(output_triplets_file, triplets)

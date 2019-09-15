@@ -36,13 +36,15 @@ parser.add_argument('--seed', type=int, default=1, metavar='S',
                     help='random seed (default: 1)')
 parser.add_argument('--log-interval', type=int, default=20, metavar='N',
                     help='how many batches to wait before logging training status')
-parser.add_argument('--margin', type=float, default=0.2, metavar='M',
-                    help='margin for triplet loss (default: 0.2)')
+parser.add_argument('--margin', type=float, default=0.0, metavar='M',
+                    help='margin for triplet loss (default: 0.0)')
 parser.add_argument('--resume', default='', type=str,
                     help='path to latest checkpoint (default: none)')
 parser.add_argument('--name', default='TripletNet', type=str,
                     help='name of experiment')
 
+#feature = 'mel_spec'
+feature = 'chroma'
 best_acc = 0
 #train_split_ratio = 0.2
 
@@ -59,7 +61,7 @@ def main():
     plotter = VisdomLinePlotter(env=args.name)
 
 
-    train_set = TripletAudioLoader('triplets_train.txt',transform=transforms.Compose([transforms.ToTensor()]))
+    train_set = TripletAudioLoader('triplets_train.txt', feature=feature, transform=transforms.Compose([transforms.ToTensor()]))
     '''
     # Creating data indices for training and validation splits:
     train_size = int(train_split_ratio * len(train_set))
@@ -72,7 +74,8 @@ def main():
     
     train_loader = DataLoader(dataset=train_set, batch_size=args.batch_size, shuffle=True, **kwargs)
     test_loader = DataLoader(
-        TripletAudioLoader('triplets_test.txt',transform=transforms.Compose([transforms.ToTensor()])),
+        TripletAudioLoader('triplets_test.txt',feature=feature,
+        transform=transforms.Compose([transforms.ToTensor()])),
         batch_size=args.batch_size, shuffle=False, **kwargs)
     
     # Use MNIST dataset just for testing model architecture
@@ -90,8 +93,8 @@ def main():
     #                    ])),
     #     batch_size=args.batch_size, shuffle=True, **kwargs)
 
-    #model = ChromagramEmbeddingNet()
-    model = MelSpectrogramEmbeddingNet()
+    model = MelSpectrogramEmbeddingNet() if feature == 'mel_spec' else ChromagramEmbeddingNet()
+    print('>> Model: {}\n'.format(model.__class__.__name__))
     tnet = TripletNet(model).to(device)
 
     # optionally resume from a checkpoint
