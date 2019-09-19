@@ -8,6 +8,7 @@ import librosa
 data_path = 'audio_data/'
 music_folder = './test_piano_segments/'
 filenames_txt = data_path + 'filenames.txt'
+labels_txt = data_path + 'labels.txt'
 avgv = np.load(data_path + 'avg.npy')
 stdv = np.load(data_path + 'std.npy')
 
@@ -33,11 +34,10 @@ def audio_mel_spectrogram_loader(path, S_max, sr=22050):
     else:
         S = np.pad(S, ((0, 0), (0, max(0, S_max-S.shape[-1]))), 'constant', constant_values=(0))
     # print(S.shape) #(128, S_max)
-    #S = np.transpose()
     S = np.transpose(np.log(1+1000*S))
     # print(S.shape) #(S_max, 128)
     S = (S-avgv)/stdv
-    # S = np.expand_dims(S, 2) # (N, 128, 1)
+    #S = S / S.max()
     # print(S.shape)
     return S
 
@@ -47,14 +47,14 @@ class TripletAudioLoader(torch.utils.data.Dataset):
     #neg_num = 5
     def __init__(self, data_txt, feature, 
                 audio_file_folder=music_folder, transform=None):
-                 #feature_extractor=audio_mel_spectrogram_loader):
-                 #feature_extractor=audio_chromagram_loader):
         """ filenames_txt: A text file with each line containing the path to an audio segment e.g.,
-                music_segments/000/cut000-001.wav
+                music_segments/000/cut000-001.wav.
+            labels_txt: A text file with each line containing the song index to the audio segment e.g., 
+                000.
             triplets_file_name: A text file with each line containing two integers and one list, 
                 where integer i refers to the i-th segment in the filenames file. 
                 For a line of intergers 'a b [c d e f g]', a triplet is contained such that audio a is more 
-                similar to audio b than it is to audio c, d, e, f,and g. e.g., 41 42 [20 123 547 47 99]
+                similar to audio b than it is to audio c, d, e, f,and g. e.g., 41 42 [20 123 547 47 99].
                 (Since we define the positive case is exactly the next segment)
         """
         # ancs, poss, negs = [], [], [] # Anchor, Positive, Negative
@@ -65,8 +65,7 @@ class TripletAudioLoader(torch.utils.data.Dataset):
                 # poss.append(int(line.split()[1]))
                 negs = line[line.rfind('[')+1: line.rfind(']')].split(', ')
                 for i in range(len(negs)):
-                    # anchor, close, far
-                    triplets.append((int(line.split()[0]), int(line.split()[1]), int(negs[i])))
+                    triplets.append((int(line.split()[0]), int(line.split()[1]), int(negs[i]))) # anchor, close, far
                 #negs = [int(a) for a in negs]
                 # triplets.append((int(line.split()[0]), int(line.split()[1]), negs)) # anchor, close, far
         self.triplets = triplets  # (ancs, poss, negs)
@@ -75,13 +74,14 @@ class TripletAudioLoader(torch.utils.data.Dataset):
         with open(filenames_txt) as f:
             for line in f:
                 self.audio_path.append(os.path.join(self.audio_file_folder, line.rstrip('\n')))
+        self.labels = [] 
+        with open(labels_txt) as f:
+            for line in f: self.labels.append(line.rstrip('\n')) # from which song
         self.transform = transform
-        self.feature_extractor = audio_mel_spectrogram_loader if feature == 'mel_spec' else audio_chromagram_loader
-
+        self.feature_extractor = audio_mel_spectrogram_loader if feature.startswith('mel_spec') else audio_chromagram_loader
         # self.ancs = ancs # Anchor
         # self.poss = poss # Positive
         # self.negs = negs # Negative
-        # self.label = label # from which song
 
     def __getitem__(self, index):
         data = []
@@ -91,22 +91,6 @@ class TripletAudioLoader(torch.utils.data.Dataset):
             if self.transform is not None:
                 data[i] = self.transform(data[i])
         return data
-
-    # def __getitem__(self, index):
-    #     assert len(self.triplets[index]) == 3
-    #     data = []
-    #     for i in range(len(self.triplets[index])):
-    #         if i < 2: # Anchor, Pos
-    #             data.append(self.feature_extractor(self.audio_path[int(self.triplets[index][i])], self.S_max))
-    #             if self.transform is not None: data[i] = self.transform(data[i])
-    #         else:
-    #             negs = []
-    #             for j in range(self.neg_num):
-    #                 negs.append(self.feature_extractor(self.audio_path[int(self.triplets[index][i][j])], self.S_max))
-    #             if self.transform is not None: negs[i] = self.transform(negs[i])
-    #             data.append(negs)
-    #     #print(len(data), len(data[2])) #(3, 5)
-    #     return data
 
     def __len__(self):
         return len(self.triplets)

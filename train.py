@@ -12,17 +12,18 @@ from torch.utils.data import DataLoader
 import torch.backends.cudnn as cudnn
 from triplet_mnist_loader import MNIST_t # for testing
 from triplet_audio_loader import TripletAudioLoader
-from tripletnet import TripletNet, ChromagramEmbeddingNet, MelSpectrogramEmbeddingNet
+from tripletnet import TripletNet, ChromagramEmbeddingNet, MelSpectrogramEmbeddingNet, MelSpectrogram2DEmbeddingNet
 from visdom import Visdom
 import numpy as np
-#import matplotlib.pyplot as plt
-#from sklearn.manifold import TSNE
+
+import matplotlib.pyplot as plt
+from sklearn.manifold import TSNE
 
 # Training settings
 parser = argparse.ArgumentParser(description='PyTorch Triplet Network')
 parser.add_argument('--batch-size', type=int, default=64, metavar='N',
                     help='input batch size for training (default: 64)')
-parser.add_argument('--test-batch-size', type=int, default=100, metavar='N',
+parser.add_argument('--test-batch-size', type=int, default=50, metavar='N',
                     help='input batch size for testing (default: 1000)')
 parser.add_argument('--epochs', type=int, default=100, metavar='N',
                     help='number of epochs to train (default: 10)')
@@ -43,13 +44,16 @@ parser.add_argument('--resume', default='', type=str,
 parser.add_argument('--name', default='TripletNet', type=str,
                     help='name of experiment')
 
+
+
 #feature = 'mel_spec'
+#feature = 'mel_spec_2d'
 feature = 'chroma'
 best_acc = 0
 #train_split_ratio = 0.2
 
 def main():
-    global args, best_acc, plotter, device
+    global args, best_acc, plotter, device, version
     args = parser.parse_args()
     args.cuda = not args.no_cuda and torch.cuda.is_available()
     device = torch.device('cuda' if args.cuda else 'cpu')
@@ -58,9 +62,12 @@ def main():
     if args.cuda: torch.cuda.manual_seed(args.seed)
     kwargs = {'num_workers': 1, 'pin_memory': True} if args.cuda else {}
 
+    version = input('Enter Version:')
+    args.name = args.name+'_'+version
+    print(args.name)
     plotter = VisdomLinePlotter(env=args.name)
 
-
+    # Load Data
     train_set = TripletAudioLoader('triplets_train.txt', feature=feature, transform=transforms.Compose([transforms.ToTensor()]))
     '''
     # Creating data indices for training and validation splits:
@@ -93,8 +100,14 @@ def main():
     #                    ])),
     #     batch_size=args.batch_size, shuffle=True, **kwargs)
 
-    model = MelSpectrogramEmbeddingNet() if feature == 'mel_spec' else ChromagramEmbeddingNet()
-    print('>> Model: {}\n'.format(model.__class__.__name__))
+    if feature == 'mel_spec':
+        model = MelSpectrogramEmbeddingNet()
+    elif feature == 'mel_spec_2d':
+        model = MelSpectrogram2DEmbeddingNet()
+    else: model = ChromagramEmbeddingNet()
+    print('>> Model: {}\n'.format(
+        model.__class__.__name__.replace('EmbeddingNet', '')))
+
     tnet = TripletNet(model).to(device)
 
     # optionally resume from a checkpoint
@@ -124,14 +137,12 @@ def main():
         train(train_loader, tnet, criterion, optimizer, epoch)
         # evaluate on validation set
         acc = test(test_loader, tnet, criterion, epoch)
-        #acc = test(test_loader, tnet, criterion, epoch)
 
         # remember best acc and save checkpoint
         is_best = acc > best_acc
         best_acc = max(acc, best_acc)
         save_checkpoint({
-            'epoch': epoch + 1,
-            'state_dict': tnet.state_dict(),
+            'epoch': epoch + 1, 'state_dict': tnet.state_dict(),
             'best_prec1': best_acc,
         }, is_best)
 
@@ -193,17 +204,20 @@ def train(train_loader, tnet, criterion, optimizer, epoch):
                       100. * accs.val, 100. * accs.avg, emb_norms.val, emb_norms.avg))
 
             # # Visualization of trained flatten layer (T-SNE) (yet to be completed)
-            # tsne = TSNE(perplexity=30, n_components=2, init='pca', n_iter=5000)
+            # tsne = TSNE(perplexity=30, n_components=2, init='pca', n_iter=500)
             # #plot_only = 500
             # #low_dim_embs = tsne.fit_transform(last_layer.data.numpy()[:plot_only, :])
-            # #data = [embedded_x.detach().numpy()]
-            # #data = data.append([embedded_y.detach().numpy()])
+            # # if args.cuda:
+            # data = np.concatenate((embedded_x.cpu().detach().numpy(), embedded_y.cpu().detach().numpy()))
+            # data = np.concatenate((data, embedded_z.cpu().detach().numpy()))
+            # # else:
+            # #     data = np.concatenate((embedded_x.detach().numpy(), embedded_y.detach().numpy()))
+            # #     data = np.concatenate((data, embedded_z.detach().numpy()))
+            # print(embedded_x.cpu().detach().numpy().shape) #736, 50
+            # print(data.shape) #2208, 50-> fc2_out
             # #print(data)
-            # #data = data.append([embedded_z.detach().numpy()])
-            # data = np.concatenate((embedded_x.detach().numpy(), embedded_y.detach().numpy()))
-            # data = np.concatenate((data, embedded_z.detach().numpy()))
-            # print(data)
             # X_tsne = tsne.fit_transform(data)
+            # print(X_tsne.shape) #2208, 2
             # x_min, x_max = X_tsne.min(0), X_tsne.max(0)
             # X_norm = (X_tsne - x_min) / (x_max - x_min)
             # plt.figure(figsize=(8, 8))
@@ -220,12 +234,6 @@ def train(train_loader, tnet, criterion, optimizer, epoch):
     plotter.plot('loss', 'train', epoch, losses.avg, label='Loss')
     plotter.plot('emb_norms', 'train', epoch,
                  emb_norms.avg, label='Embeddings')
-
-    '''
-    acc_train.append(accs.avg)
-    loss_train.append(losses.avg)
-    emb_train.append(emb_norms.avg)
-    '''
 
 def test(test_loader, tnet, criterion, epoch):
     losses = AverageMeter()
@@ -256,10 +264,6 @@ def test(test_loader, tnet, criterion, epoch):
     plotter.plot('loss', 'test', epoch, losses.avg, label='Loss')
     #plot('acc', 'test', epoch, accs.avg, color='red', label='Accuracy')
     #plot('loss', 'test', epoch, losses.avg, color='green', label='Loss')
-    '''
-    acc_test.append(accs.avg)
-    loss_test.append(losses.avg)
-    '''
 
     return accs.avg
 
