@@ -68,13 +68,38 @@ class MelSpectrogramEmbeddingNet(nn.Module):
         return self.fc2(x)
 
 # Mel-Spectrogram - Conv2D
+#0919b-1st
+# FEATURE_DIM = 128
+# class MelSpectrogram2DEmbeddingNet(nn.Module):
+#     def __init__(self):
+#         super(MelSpectrogram2DEmbeddingNet, self).__init__()
+#         self.conv1 = nn.Conv2d(1, 70, kernel_size=(3, FEATURE_DIM))
+#         self.conv2 = nn.Conv2d(70, 50, kernel_size=(3, 1))
+#         self.conv2_drop = nn.Dropout2d(p=0.3)
+#         self.fc1 = nn.Linear(100, 70)
+#         self.fc2 = nn.Linear(70, 50)
+
+#     def forward(self, x):
+#         #print(x.shape)#(BATCH_SIZE, IN_CHANNEL, S_MAX, FEATURE_DIM)
+#         #x = x.transpose(1, 3)
+#         #print(x.shape)#(BATCH_SIZE, FEATURE_DIM, S_MAX, IN_CHANNEL)
+#         x = F.relu(F.max_pool2d(self.conv1(x), (2,1)))
+#         #print(x.shape)#(BATCH_SIZE, CONV2_IN, , )
+#         x = F.relu(F.max_pool2d(self.conv2_drop(self.conv2(x)), (2,1)))
+#         #print(x.shape)#(BATCH_SIZE, FC1_IN, , )
+#         x = x.view(-1, 100)
+#         x = F.relu(self.fc1(x))
+#         x = F.dropout(x, training=self.training)
+#         return self.fc2(x)
+
+#0919c
 class MelSpectrogram2DEmbeddingNet(nn.Module):
     def __init__(self):
         super(MelSpectrogram2DEmbeddingNet, self).__init__()
         FEATURE_DIM = 128
-        self.conv1 = nn.Conv2d(FEATURE_DIM, 50, kernel_size=(3, 1))
-        self.conv2 = nn.Conv2d(50, 100, kernel_size=(3, 1))
-        self.conv2_drop = nn.Dropout2d(p=0.5)
+        self.conv1 = nn.Conv2d(FEATURE_DIM, 70, kernel_size=(3, 1))
+        self.conv2 = nn.Conv2d(70, 50, kernel_size=(3, 1))
+        self.conv2_drop = nn.Dropout2d(p=0.3)
         self.fc1 = nn.Linear(100, 70)
         self.fc2 = nn.Linear(70, 50)
 
@@ -91,6 +116,8 @@ class MelSpectrogram2DEmbeddingNet(nn.Module):
         x = F.dropout(x, training=self.training)
         return self.fc2(x)
 
+# channel=1
+#0919a
 # class MelSpectrogram2DEmbeddingNet(nn.Module):
 #     def __init__(self):
 #         super(MelSpectrogram2DEmbeddingNet, self).__init__()

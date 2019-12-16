@@ -47,8 +47,8 @@ parser.add_argument('--name', default='TripletNet', type=str,
 
 
 #feature = 'mel_spec'
-#feature = 'mel_spec_2d'
-feature = 'chroma'
+feature = 'mel_spec_2d'
+#feature = 'chroma'
 best_acc = 0
 #train_split_ratio = 0.2
 
